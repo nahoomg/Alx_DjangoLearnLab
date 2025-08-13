@@ -1,26 +1,17 @@
 from django.db import models
 
-# Create your models here.
-# api/models.py
-
-from django.db import models
-
 class Author(models.Model):
-    """
-    Represents an author of books.
-    """
-    name = models.CharField(max_length=100)
-
+    name = models.CharField(max_length=255)
+       
     def __str__(self):
         return self.name
-
+# The Author model stores the name of the author. 
+  
 class Book(models.Model):
-    """
-    Represents a book with a title, publication year, and a foreign key to its author.
-    """
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=255)
     publication_year = models.IntegerField()
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='books')
-
+    author = models.ForeignKey(Author, related_name='books', on_delete=models.CASCADE)
+# The Book model stores the name and publication year of the book.
     def __str__(self):
-        return f"{self.title} by {self.author.name}"
+        return self.title
+# Create your models here.
