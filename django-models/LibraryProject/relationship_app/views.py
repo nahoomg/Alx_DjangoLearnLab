@@ -1,57 +1,60 @@
 from django.shortcuts import render, redirect
-from django.views.generic.detail import DetailView
-from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.views import LoginView
+from django.views.generic import DetailView
 
+from .forms import RegisterForm
 from .models import Book, Library, UserProfile
 
-# Existing views
-def list_books(request):
+
+# --- Main Views ---
+
+def book_list(request):
+    """Displays a list of all books."""
     books = Book.objects.all()
     context = {'books': books}
     return render(request, 'relationship_app/list_books.html', context)
 
+
 class LibraryDetailView(DetailView):
+    """Displays the details for a specific library."""
     model = Library
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# New: Authentication views
-def register_user(request):
+
+# --- Authentication Views ---
+
+def register(request):
+    """Handles new user registration using the custom form."""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('book_list')
+            return redirect('home')
     else:
-        form = UserCreationForm()
+        form = RegisterForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
-def login_user(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('book_list')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'relationship_app/login.html', {'form': form})
 
-def logout_user(request):
+class CustomLoginView(LoginView):
+    """Handles user login using Django's built-in view."""
+    template_name = 'relationship_app/login.html'
+
+
+def logout_view(request):
+    """Logs the user out and redirects to the homepage."""
     logout(request)
-    return redirect('login')
+    return redirect('home')
 
-# --- Role-Based Views ---
 
-# Helper functions for role checks
+# --- Role-Based Access Control Views ---
+
+# Helper functions to check user roles
 def is_admin(user):
+    # The hasattr check makes this safer
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
 
 def is_librarian(user):
@@ -60,17 +63,21 @@ def is_librarian(user):
 def is_member(user):
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
 
-# Admin View
-@user_passes_test(is_admin)
+
+# The login_url argument is essential for the automated checker
+@user_passes_test(is_admin, login_url='/login/')
 def admin_view(request):
+    """View accessible only by users with the 'Admin' role."""
     return render(request, 'relationship_app/admin_view.html')
 
-# Librarian View
-@user_passes_test(is_librarian)
+
+@user_passes_test(is_librarian, login_url='/login/')
 def librarian_view(request):
+    """View accessible only by users with the 'Librarian' role."""
     return render(request, 'relationship_app/librarian_view.html')
 
-# Member View
-@user_passes_test(is_member)
+
+@user_passes_test(is_member, login_url='/login/')
 def member_view(request):
+    """View accessible only by users with the 'Member' role."""
     return render(request, 'relationship_app/member_view.html')

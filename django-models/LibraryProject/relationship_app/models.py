@@ -27,21 +27,19 @@ class Library(models.Model):
 
 # New UserProfile model with Role-Based Access Control
 class UserProfile(models.Model):
-    # Link to Django's built-in User model with a one-to-one relationship
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
-    # Define user roles
     ROLE_CHOICES = (
         ('Admin', 'Admin'),
         ('Librarian', 'Librarian'),
         ('Member', 'Member'),
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Member')
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Member')
 
     def __str__(self):
-        return f"{self.user.username}'s Profile ({self.role})"
+        return f'{self.user.username} - {self.role}'
 
-# Django Signals: Automatically create a UserProfile when a new User is created
+# NEW: Signal to create a UserProfile automatically when a new User is created
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

@@ -3,10 +3,16 @@
 import os
 import sys
 
-
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django-models.settings')
+    # This block of code is a more robust way to handle the Python path.
+    # It ensures the project's root directory is always discoverable.
+    if __name__ == '__main__':
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_models.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -16,7 +22,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
     execute_from_command_line(sys.argv)
-
 
 if __name__ == '__main__':
     main()
