@@ -2,9 +2,10 @@ from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.forms import UserCreationForm # This is the explicit import the checker needs
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import user_passes_test
 
-from .models import Book, Library
+from .models import Book, Library, UserProfile
 
 # Existing views
 def list_books(request):
@@ -17,7 +18,7 @@ class LibraryDetailView(DetailView):
     template_name = 'relationship_app/library_detail.html'
     context_object_name = 'library'
 
-# Authentication views
+# New: Authentication views
 def register_user(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -47,15 +48,29 @@ def logout_user(request):
     logout(request)
     return redirect('login')
 
-# --- Helper functions for role checks ---
+# --- Role-Based Views ---
+
+# Helper functions for role checks
 def is_admin(user):
-    # Check if the user is authenticated and has the 'Admin' role
     return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Admin'
 
-# --- Admin View ---
-from django.contrib.auth.decorators import user_passes_test
-# ... other imports ...
+def is_librarian(user):
+    return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Librarian'
 
+def is_member(user):
+    return user.is_authenticated and hasattr(user, 'userprofile') and user.userprofile.role == 'Member'
+
+# Admin View
 @user_passes_test(is_admin)
 def admin_view(request):
     return render(request, 'relationship_app/admin_view.html')
+
+# Librarian View
+@user_passes_test(is_librarian)
+def librarian_view(request):
+    return render(request, 'relationship_app/librarian_view.html')
+
+# Member View
+@user_passes_test(is_member)
+def member_view(request):
+    return render(request, 'relationship_app/member_view.html')
