@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
-class RelationshipAppConfig(AppConfig):
+
+class BookshelfConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'LibraryProject.relationship_app'
-    label = 'relationship_app' # Explicitly set the label
+    name = 'relationship_app'
