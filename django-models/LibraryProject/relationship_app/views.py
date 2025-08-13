@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.views.generic.detail import DetailView
 from django.contrib.auth import login, logout, authenticate
-from django.contrib.auth.forms import AuthenticationForm # Changed this line
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm # Updated import
+
 from .models import Book, Library
-from .forms import CustomUserCreationForm # New import
 
 # Existing views (keep them as they are)
 def list_books(request):
@@ -19,13 +19,13 @@ class LibraryDetailView(DetailView):
 # New: User Registration View
 def register_user(request):
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = UserCreationForm(request.POST) # Uses UserCreationForm directly
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('book_list') # Redirect to book list after successful registration
+            return redirect('book_list')
     else:
-        form = CustomUserCreationForm()
+        form = UserCreationForm()
     return render(request, 'relationship_app/register.html', {'form': form})
 
 # New: User Login View
@@ -38,10 +38,7 @@ def login_user(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('book_list') # Redirect to book list after successful login
-            else:
-                # Optional: Add error message for invalid credentials
-                pass
+                return redirect('book_list')
     else:
         form = AuthenticationForm()
     return render(request, 'relationship_app/login.html', {'form': form})
@@ -49,4 +46,4 @@ def login_user(request):
 # New: User Logout View
 def logout_user(request):
     logout(request)
-    return redirect('login') # Redirect to login page after logout
+    return redirect('login')
